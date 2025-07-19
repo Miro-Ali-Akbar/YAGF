@@ -50,6 +50,11 @@ while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
         git push
 
         pr1=$(gh pr create --title $current_date.$commit --body "$commit pull request for $current_date" | grep -oE "[0-9]+$")
+        gh pr review --comment --body "comment 1 for pr"
+        gh pr review --comment --body "comment 2 for pr"
+        gh pr review --comment --body "comment 3 for pr"
+        # doesnt allow yourself to approve TODO:
+        # gh pr review --approve
         gh pr merge -dm $pr1
 
       else
