@@ -2,11 +2,12 @@
 # example
 # ./git_fill.sh $(date -d "1 year ago" +%Y-%m-%d)
 repository_folder="commits/"
-filename="file.txt"
+filename="file.py"
 text="Lorem ipsum"
 issue_title="Issues"
 branch_name="Pull_request"
-current_date=$(date -d "${1:-1 day ago}" +%Y-%m-%d)
+last_commit="$(git -C $repository_folder log --pretty=format:%ci -n 1)"
+current_date=$(date -d "${1:$last_commit}" +%Y-%m-%d)
 today=$(date +%Y-%m-%d)
 
 # INIT
@@ -14,25 +15,24 @@ today=$(date +%Y-%m-%d)
 
 
 file_changer() {
-  if [[ ! -f $filename ]]; then
-    echo $text > $filename
-    git add $filename
+  if [[ ! -f "$filename" ]]; then
+    echo "$text" > "$filename"
   else
-    rm $filename
-    git add $filename
+    rm "$filename"
   fi
+  git add "$filename"
 }
 
 commiter() {
-  commit_time="${current_date}T12:$(printf "%02d" "$commit"):00"
+  commit_time="${current_date}T12:00:00"
   GIT_AUTHOR_DATE="$commit_time" \
     GIT_COMMITTER_DATE="$commit_time" \
-    git commit -m "$commit commit for $current_date"
-  }
+    git commit -m "Commit for $current_date"
+}
 
-if [ ! -d $repository_folder ]; then
-  mkdir $repository_folder
-  git -C $repository_folder init
+if [ ! -d "$repository_folder" ]; then
+  mkdir "$repository_folder"
+  git -C "$repository_folder" init
   echo "Creating folder"
 fi
 
@@ -43,10 +43,11 @@ while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
 
     file_changer
 
+    # git remote -v | grep "github" | wc -l > 0 before
     issue1=$(gh issue create --title "$issue_title 1" --body "1 comment for $current_date" | grep -oE "[0-9]+$")
     issue2=$(gh issue create --title "$issue_title 2" --body "2 comment for $current_date" | grep -oE "[0-9]+$")
-    gh issue close $issue1
-    gh issue close $issue2
+    gh issue close "$issue1"
+    gh issue close "$issue2"
 
     git checkout -b "$branch_name"
     commiter
@@ -74,7 +75,7 @@ while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
       file_changer
       commiter
 
-      done
+    done
   fi
 
   current_date=$(date -I -d "$current_date + 1 day")
