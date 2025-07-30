@@ -1,14 +1,21 @@
 #!/bin/bash
 # example
 # ./git_fill.sh $(date -d "1 year ago" +%Y-%m-%d)
-repository_folder="commits/"
-filename="file.py"
-text="Lorem ipsum"
+repository_folder="fivattempt/"
+filename="script.sh"
+text="for ((index = 0; index < ($RANDOM % 103); index++)); do
+  echo "\$index"
+done
+"
 issue_title="Issues"
 branch_name="Pull_request"
-last_commit="$(git -C $repository_folder log --pretty=format:%ci -n 1)"
-current_date=$(date -d "${1:$last_commit}" +%Y-%m-%d)
-today=$(date +%Y-%m-%d)
+if [ -n "$1" ]; then
+  current_date=$(date -d "$1" +%Y-%m-%d)
+else
+  last_commit="$(git -C "$repository_folder" log --pretty=format:%cd -n 1)"
+  current_date=$(date -d "$last_commit" +%Y-%m-%d)
+fi
+today="$(date +%Y-%m-%d)"
 
 # INIT
 # push to a repo on gh
