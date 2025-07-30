@@ -12,7 +12,7 @@ branch_name="Pull_request"
 if [ -n "$1" ]; then
   current_date=$(date -d "$1" +%Y-%m-%d)
 else
-  last_commit="$(git -C "$repository_folder" log --pretty=format:%cd -n 1)"
+  last_commit="$(git -C "$repository_folder" log --pretty=format:%ci -n 1)"
   current_date=$(date -d "$last_commit" +%Y-%m-%d)
 fi
 today="$(date +%Y-%m-%d)"
