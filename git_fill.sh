@@ -1,8 +1,8 @@
 #!/bin/bash
 # example
 # ./git_fill.sh $(date -d "1 year ago" +%Y-%m-%d)
-repository_folder="fivattempt/"
-filename="script.sh"
+repository_folder="$(pwd)/commits11/"
+filename="$(pwd)script.sh"
 text="for ((index = 0; index < ($RANDOM % 103); index++)); do
   echo "\$index"
 done
@@ -41,6 +41,11 @@ if [ ! -d "$repository_folder" ]; then
   mkdir "$repository_folder"
   git -C "$repository_folder" init
   echo "Creating folder"
+fi
+
+if [[ "$current_date" == "$today" ]]; then
+  echo "Already run today"
+  exit 0
 fi
 
 cd $repository_folder

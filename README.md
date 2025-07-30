@@ -11,8 +11,9 @@ By default not everyday will be maxed out and is used to mimic **regular** activ
 ## Setup
 1. Change the top variables to what suits you.
 2. Run the script with a date format that fits you desired time span e.g. `./git_fill.sh $(date -d "1 year ago" +%Y-%m-%d)`
-3. Run `./git_fill.sh` when you want to commit back up to present day or set up a [cron-job](##cron-job) 
+3. Run `./git_fill.sh` when you want to commit back up to present day or set up a [Cron-job](##cron-job) 
 
 ## Cron-job
-WIP
-
+The cron-job is set to run every half an hour to ensure it runs when your computer is running. The timing can be adjusted but note that the script will only commit if it hasn't run that day.
+1. Copy the response of `echo "*/30 * * * * $(pwd)/git_fill.sh"`
+2. Paste it inside `crontab -e`
