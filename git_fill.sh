@@ -2,9 +2,9 @@
 # example
 # ./git_fill.sh $(date -d "1 year ago" +%Y-%m-%d)
 repository_folder="$(pwd)/commits11/"
-filename="$(pwd)script.sh"
+filename="script.sh"
 text="for ((index = 0; index < ($RANDOM % 103); index++)); do
-  echo "\$index"
+echo "\$index"
 done
 "
 issue_title="Issues"
@@ -16,10 +16,7 @@ else
   current_date=$(date -d "$last_commit" +%Y-%m-%d)
 fi
 today="$(date +%Y-%m-%d)"
-
-# INIT
-# push to a repo on gh
-
+is_remote_repo=[[ ! -z $(git remote -v) ]]
 
 file_changer() {
   if [[ ! -f "$filename" ]]; then
@@ -35,6 +32,12 @@ commiter() {
   GIT_AUTHOR_DATE="$commit_time" \
     GIT_COMMITTER_DATE="$commit_time" \
     git commit -m "Commit for $current_date"
+  }
+
+regex() {
+    # Usage: regex "string" "regex"
+    [[ $1 =~ $2 ]] 
+    return "${BASH_REMATCH[1]}"
 }
 
 if [ ! -d "$repository_folder" ]; then
@@ -51,27 +54,26 @@ fi
 cd $repository_folder
 while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
 
-  if [[ "$current_date" == "$today" ]]; then
+  if [[ "$current_date" == "$today" && $is_remote_repo ]]; then
 
     file_changer
 
-    # git remote -v | grep "github" | wc -l > 0 before
-    issue1=$(gh issue create --title "$issue_title 1" --body "1 comment for $current_date" | grep -oE "[0-9]+$")
-    issue2=$(gh issue create --title "$issue_title 2" --body "2 comment for $current_date" | grep -oE "[0-9]+$")
-    gh issue close "$issue1"
-    gh issue close "$issue2"
+    issue_id_1="$(regex "$(gh issue create --title "$issue_title 1" --body "1 comment for $current_date")" '([0-9])+$')"
+    issue_id_2="$(regex "$(gh issue create --title "$issue_title 2" --body "2 comment for $current_date")" '([0-9])+$')"
+    gh issue close "$issue_id_1"
+    gh issue close "$issue_id_2"
 
     git checkout -b "$branch_name"
     commiter
     git push
 
-    pr1=$(gh pr create --title $current_date --body "Pull request for $current_date" | grep -oE "[0-9]+$")
+    pr_id="$(regex "$(gh pr create --title $current_date --body "Pull request for $current_date")" '([0-9])+$'))"
     gh pr review --comment --body "comment 1 for pr"
     gh pr review --comment --body "comment 2 for pr"
     gh pr review --comment --body "comment 3 for pr"
     # doesnt allow yourself to approve TODO:
     # gh pr review --approve
-    gh pr merge -dm $pr1
+    gh pr merge -dm $pr_id
     echo "DONE!"
     exit 0
   fi
@@ -92,4 +94,7 @@ while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
 
   current_date=$(date -I -d "$current_date + 1 day")
 done
-git push
+
+if [[ $is_remote_repo ]]; then
+  git push
+fi
