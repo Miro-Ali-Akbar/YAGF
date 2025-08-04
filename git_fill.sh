@@ -16,7 +16,13 @@ else
   current_date=$(date -d "$last_commit" +%Y-%m-%d)
 fi
 today="$(date +%Y-%m-%d)"
-is_remote_repo=[[ ! -z $(git remote -v) ]]
+
+if [[ -n $(git remote -v) ]];then
+  is_remote_repo=0
+else
+  is_remote_repo=1
+fi
+
 
 file_changer() {
   if [[ ! -f "$filename" ]]; then
@@ -46,18 +52,23 @@ if [ ! -d "$repository_folder" ]; then
   echo "Creating folder"
 fi
 
+if [ $is_remote_repo -eq 0 ]; then 
+  git -C "$repository_folder" pull
+fi
+
 if [[ "$current_date" == "$today" ]]; then
   echo "Already run today"
-  exit 0
+  # exit 0
 fi
 
 cd $repository_folder
 while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
 
-  if [[ "$current_date" == "$today" && $is_remote_repo ]]; then
+  if [[ "$current_date" == "$today" && $is_remote_repo -eq 0 ]]; then
 
     file_changer
 
+    # TODO: this errors now for some reason
     issue_id_1="$(regex "$(gh issue create --title "$issue_title 1" --body "1 comment for $current_date")" '([0-9])+$')"
     issue_id_2="$(regex "$(gh issue create --title "$issue_title 2" --body "2 comment for $current_date")" '([0-9])+$')"
     gh issue close "$issue_id_1"
@@ -67,13 +78,13 @@ while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
     commiter
     git push
 
-    pr_id="$(regex "$(gh pr create --title $current_date --body "Pull request for $current_date")" '([0-9])+$'))"
+    pr_id="$(regex "$(gh pr create --title $current_date --body "Pull request for $current_date")" '([0-9])+$')"
     gh pr review --comment --body "comment 1 for pr"
     gh pr review --comment --body "comment 2 for pr"
     gh pr review --comment --body "comment 3 for pr"
     # doesnt allow yourself to approve TODO:
     # gh pr review --approve
-    gh pr merge -dm $pr_id
+    gh pr merge -dm "$pr_id"
     echo "DONE!"
     exit 0
   fi
@@ -95,6 +106,6 @@ while [[ "$current_date" < "$today" || "$current_date" == "$today"  ]]; do
   current_date=$(date -I -d "$current_date + 1 day")
 done
 
-if [[ $is_remote_repo ]]; then
+if [[ $is_remote_repo -eq 0 ]]; then
   git push
 fi
